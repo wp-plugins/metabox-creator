@@ -252,17 +252,6 @@ function mbc_get_option($option='', $return_key_val=false)
 
 
 
-/**
- * récupère le label d'une option à partir de son ID
- * NON UTILISE
- *
-function mbc_get_option_label($option_name, $id)
-{
-	$data = get_option($option_name);
-
-	return (isset($data[$id]) ? $data[$id] : false);
-}
-
 
 /**
  * Permet de récuper l'ID, le titre ou l'URL d'un post_type à partir de son nom passé en paramètre dans $mbc['page_list']
@@ -522,33 +511,6 @@ function mbc_get_select($list, $selected='', $default='---')
 
 
 
-
-/**
- * construit une liste de checkbox
- * NON UTILISÉ
- *
-function mbc_get_checkbox($name, $data, $checked = array(), $class='')
-{
-	$html = '';
-
-	if(!is_array($checked)) {
-		$checked = array($checked);
-	}
-
-	// class par defaut basé sur le nom : "checkbox_NAME"
-	$class = ($class == '') ? str_replace(array('[', ']'), '', 'checkbox_'.$name) : $class;
-
-
-	foreach($data as $key => $label)
-	{
-		$id = str_replace(array('[', ']'), '', 'checkbox_'.$name.'_'.$key);
-
-	  $checked_html = (in_array($key, $checked)) ? 'checked = "checked" ' : '';
-
-	  $html .= '<li><input type="checkbox" name="'.$name.'" value="'.$key.'" id="'.$id.'" class="'.$class.'" '.$checked_html.'/><label for="'.$id.'">'.$label.'</label></li>';
-	}
-	return $html;
-}
 
 
 
@@ -905,80 +867,10 @@ function mbc_update_param_url($new_param, $url = '')
 
 
 
-/**
- * nettoye un nom de fichier : supprime les accents, les caracteres spéciaux, les majuscules et les espaces
- * DEPRECATED : utiliser sanitize WP
- *
-function get_sanitize_string($string)
-{
-  $string = strtolower($string);
-  $string = remove_accents($string);
-
-  $a = array('1°',  '°', '€', '@', '&', 'œ', '', '', '');
-  $b = array('1er', 'eme', 'euros', '-at-', '-and-', 'oe', '', '', '');
-	$string = str_replace($a, $b, $string);
-
-	// remplace les caracteres spéciaux
-	$string = strtr($string, '\'_/\;:,"#£§<>+.!?µ%*¨$^()[]{}`’=~²|«»¾–', '---------------------------------------');
-
-	// supprime les multiples tirets successifs
-  $string = preg_replace('#\-+#', '-', $string);
-
-  // supprime les espaces en debut et fin de chaine
-  $string = str_replace('-', ' ', $string);
-  $string = trim($string);
-  $string = str_replace(' ', '-', $string);
-
-  return $string;
-}
-*/
-
-
-
-/**
- * Retire les backslashs des valeurs d'un tableau
- * DEPRECATED : use  $noslashes = array_map('stripslashes_deep', $slashes);
- *
-function mbc_stripslashes_array($array)
-{
-	return is_array($array) ? array_map('mbc_stripslashes_array', $array) : stripslashes($array);
-}
-
-
-/**
- * Renvoi le display name
- * DEPRECATED : use get_the_author_meta('display_name', $user_id)
- *
-function get_user_displayname($user_id)
-{
-	global $wpdb;
-
-	$display_name = $wpdb->get_var($wpdb->prepare("SELECT display_name FROM $wpdb->users WHERE ID = %d", $user_id));
-
-	return $display_name;
-}
 
 
 
 
-/**
- * Renvoi un champ specific de la table users
- * DEPRECATED : use get_the_author_meta()
- *
-function mbc_get_user_field($field, $user_id = null)
-{
-	global $wpdb;
-
-	if(!$user_id) {
-		$user_id = get_current_user_id();
-	}
-
-	$field_value = $wpdb->get_var($wpdb->prepare("SELECT ".esc_sql($field)." FROM $wpdb->users WHERE ID = %d", $user_id));
-
-	return $field_value;
-}
-
-*/
 
 function mbc_get_term_label($id, $taxonomy)
 {
@@ -988,23 +880,6 @@ function mbc_get_term_label($id, $taxonomy)
 }
 
 
-
-/**
- * TODO
- *
-function mbc_get_users()
-{
-	$user_query = new WP_User_Query(array('fields'=>array('ID', 'display_name')));
-
-	$list_user = array();
-	if(!empty($user_query->results))
-	{
-		foreach($user_query->results as $user) {
-			$list_user[$user->ID] = $user->display_name;
-		}
-	}
-}
-*/
 
 
 
@@ -1123,63 +998,3 @@ function mbc_upload_image($upload, $post_id=null)
 
 	return $file;
 }
-
-
-
-
-
-
-
-/**
- * get latitude & longitude based on address. Use googlemap API
- * return @array informations
- * NON UTILISE
- *
-function mbc_get_lat_lng($address, $zipcode, $city, $country)
-{
-  global $wpdb, $count_request;
-
-  $count_request = (empty($count_request)) ? 1 : $count_request + 1;
-
-  // tempo to avoid error 620 (G_GEO_TOO_MANY_QUERIES)
-  if($count_request % 10 == 0) {
-    sleep(1);
-  }
-
-  // remove CEDEX from city var
-  $city = str_ireplace('cedex', '', $city);
-
-  $where = stripslashes("$address $zipcode, $city, $country");
-  $whereurl = urlencode($where);
-
-
-  // récupere les infos sur concernant l'adresse
-	$geocode = file_get_contents('http://maps.google.com/maps/api/geocode/json?address='.$whereurl.'&sensor=false');
-	$list = json_decode($geocode);
-
-  // construction du tableau
-  $latlng['latitude'] = ($list->status == 'OK') ? $list->results[0]->geometry->location->lat : '';
-  $latlng['longitude'] = ($list->status == 'OK') ? $list->results[0]->geometry->location->lng : '';
-  $latlng['status'] = $list->status;
-
-  return $latlng;
-}
-
-
-
-/**
- * Retourne l'ID du post correspondant ?n post_id, dans la langue donnee
- * NON UTILISE
-function mbc_get_lang_post_id($element_id, $lang, $post_type = '%')
-{
-  if (!class_exists('SitePress')) {
-    return $element_id;
-  }
-  // WPML : in case of wpml, empty post_id, display the post meta values of the original post
-  global $wpdb;
-  $post_type_cond = strpos($post_type, '%')!==FALSE ? 'source.element_type LIKE "post_'.$post_type.'"' : 'source.element_type = "post_'.$post_type.'"';
-  $q = $wpdb->prepare("SELECT dest.element_id FROM {$wpdb->prefix}icl_translations dest INNER JOIN {$wpdb->prefix}icl_translations source ON (dest.trid = source.trid) WHERE source.element_id=%d AND dest.language_code=%s", $element_id, $lang) . ' AND ' . $post_type_cond;
-  return $wpdb->get_var($q);
-}
-
-*/

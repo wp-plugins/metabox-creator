@@ -58,34 +58,6 @@ add_filter('the_generator', 'mbc_remove_wordpress_version');
 
 
 
-/**
- * ajoute le code google analytics (asynchrone) dans le header si le code Google Analytics est remplis dans les options du site
- *
-function add_google_analytics($code = '')
-{
-  global $bzp;
-
-  $code = (empty($code) && get_option($bzp['bzp_option_id'].'GOOGLE_ANALYTICS') != '' && get_option($bzp['bzp_option_id'].'DISPLAY_ANALYTICS') == 1) ? get_option($bzp['bzp_option_id'].'GOOGLE_ANALYTICS') : '';
-
-  $html = (empty($code)) ? '' : "
-  <script type=\"text/javascript\">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', '".esc_attr($code)."']);
-    _gaq.push(['_trackPageview']);
-
-    (function() {
-      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-  </script>\n\n";
-
-  echo $html;
-}
-add_action('wp_head', 'add_google_analytics');
-*/
-
-
 
 
 /**
@@ -95,15 +67,6 @@ if(!defined('WP_POST_REVISIONS')) {
 	define('WP_POST_REVISIONS', 10);
 }
 
-/**
- * Désactive la sauvegarde automatique
- * => empeche la previsualisation des articles
- *
-function disable_autosave() {
-	wp_deregister_script('autosave');
-}
-//add_action('admin_init', 'disable_autosave');
-*/
 
 
 
@@ -111,8 +74,8 @@ function disable_autosave() {
 function mbc_define_var()
 {
 	if(!defined('THEME')) {
-		define('THEME', get_bloginfo('stylesheet_directory')); 
-	}	
+		define('THEME', get_bloginfo('stylesheet_directory'));
+	}
 }
 add_action('init', 'mbc_define_var');
 
@@ -137,20 +100,20 @@ add_filter('sanitize_file_name_chars', 'mbc_sanitize_file_name_chars', 10, 1);
 /**
  * Supprime TOUS les caractères spéciaux
  */
-function mbc_sanitize_filename_on_upload($filename) 
+function mbc_sanitize_filename_on_upload($filename)
 {
 	$ext = pathinfo($filename, PATHINFO_EXTENSION);
-	
+
 	// replace all weird characters
 	$sanitized = preg_replace('/[^a-zA-Z0-9\-_.]/','', substr($filename, 0, -(strlen($ext)+1)));
-	
+
 	// replace dots inside filename
 	$sanitized = str_replace('.','-', $sanitized);
-	
+
 	// supprime les -- et le - final
 	$sanitized = preg_replace('/[\-]{2,99}/', '-', $sanitized);
 	$sanitized = preg_replace('/[\-]+$/', '', $sanitized);
-	
+
 	return $sanitized.'.'.$ext;
 }
 add_filter('sanitize_file_name', 'mbc_sanitize_filename_on_upload', 11);
@@ -159,15 +122,15 @@ add_filter('sanitize_file_name', 'mbc_sanitize_filename_on_upload', 11);
 
 
 
-/** 
+/**
  * Ajoute le lien "Dupliquer" pour les post_type definie dans le tableau $mbc['duplicate_post']
  */
-function mbc_add_duplicate_link($actions) 
+function mbc_add_duplicate_link($actions)
 {
 	global $post, $mbc;
 
 	$check_post_type = (isset($mbc['duplicate_post'])) ? $mbc['duplicate_post'] : array();
-	
+
 	if(in_array($post->post_type, $check_post_type) && current_user_can('edit_post', $post->ID)) {
 		$actions['mbc_duplicate'] = '<a href="'.admin_url('admin.php?action=mbc_duplicate_post&post='.$post->ID).'">Dupliquer</a>';
 	}
@@ -187,7 +150,7 @@ function mbc_duplicate_post_action()
 	}
 
 	$post_id = $_GET['post'];
-	
+
 	$new_post_id = mbc_duplicate_post($post_id);
 
 	$redirect = (!$new_post_id) ? 'edit.php?post_type='.get_post_type($post_id) : 'post.php?action=edit&post='.$new_post_id;
@@ -203,19 +166,19 @@ add_action('admin_action_mbc_duplicate_post', 'mbc_duplicate_post_action');
 /**
  * Permet de corriger le bug d'orientation des photos uploadé via la fonction mbc_updload_image()
  */
-function mbc_fix_image_orientation($fileinfo) 
+function mbc_fix_image_orientation($fileinfo)
 {
 	$file = $fileinfo['file'];
-	
+
 	if(!is_callable('exif_read_data')) return $fileinfo;
 
 	$exif = @exif_read_data($file);
 
-	if(!isset($exif) || !isset($exif['Orientation']) || $exif['Orientation'] <= 0) return $fileinfo; 
+	if(!isset($exif) || !isset($exif['Orientation']) || $exif['Orientation'] <= 0) return $fileinfo;
 
 	require_once ABSPATH.'wp-admin/includes/image-edit.php';
 
-	switch($exif['Orientation']) 
+	switch($exif['Orientation'])
 	{
 		case 3: $orientation = -180; break;
 		case 6:	$orientation = -90; break;
@@ -225,9 +188,9 @@ function mbc_fix_image_orientation($fileinfo)
 
 	if(!$orientation) return $fileinfo;
 
-	$image = wp_get_image_editor($file); 
-	
-	if(is_wp_error($image)) return $fileinfo; 
+	$image = wp_get_image_editor($file);
+
+	if(is_wp_error($image)) return $fileinfo;
 
 	$image->rotate($orientation);
 	$image->save($file);
