@@ -2,7 +2,7 @@
 /*
 Plugin Name: MetaBox Creator
 Plugin URI: http://www.metaboxcreator.com
-Description: Advanced tool to easily create meta boxes. Keep it simple, make it powerful !
+Description: Advanced tool to easily create meta boxes.
 Version: 1.0
 Author: Paul-Henri Chelle
 
@@ -13,7 +13,6 @@ v1.1 : Prioritaire
  - BUG : modifier le type "number" : http://decorplanit.com/plugin/ (à cause du bug chrome)
  - BUG : le champ carte doit s'appeler "map"
  - TODO : renommer les fonctions
- - EDIT : utiliserr wp_parse_args
  - EDIT : utiliser un seul get_post_meta($post_id) pour simplifier le code (via la method field_value)
  - EDIT : mettre un margin-left:0 sur la class description et error
  - ADD : class half-width pour les input
@@ -48,6 +47,8 @@ v1.2 : Evolutions
  - Gestion des conflits avec d'autres script : select2 et ACF5
 */
 
+// TODO : à verifier
+//defined('ABSPATH') or die('Direct acces not allowed!');
 
 if(!defined('MBC_PLUGIN_URL')) {
 	define('MBC_PLUGIN_URL', plugins_url('/', __FILE__));
@@ -175,11 +176,6 @@ $field_list = array(
 		'placeholder' => array('string', 'Description affichée à l\'intérieur de l\'input.', 'None'),
 	),
 
-	'button' => array(
-		'type' => 'Champ "Button"'
-		'button_label' => array('string', 'Label du bouton', __('Update')),
-	),
-	
 	'image' => array(
 		'type' => 'Champ "Image"',
 		'update_thumbnail' => array('boolean', 'Met à jour le post thumbnail avec cette image', 'false'),
@@ -233,12 +229,12 @@ function register_metabox_creator()
 	do_action('mbc_init');
 	add_action('admin_head', 'mbc_js_init');
 }
-
+/*
 function execute_metabox_creator()
 {
 	//echo 'execute<br>';
 }
-
+*/
 function register_post_type_mbc() {
 	mbc_register_post_type('mbc', 'MetaBox Creator', array('labels'=>array('name'=>'Metabox', 'singular_name'=>'Metabox'), 'supports'=>array('title'), 'public'=>false, 'show_ui'=>false), true);
 }
